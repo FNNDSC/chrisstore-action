@@ -10,7 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: fnndsc/miniChRIS@20211115
+      - uses: fnndsc/miniChRIS@20220203
       - uses: actions/checkout@v2
       - name: Create examples
         run: |
