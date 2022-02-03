@@ -50,8 +50,13 @@ runs:
           fi
           repo="${{ github.repository }}"
           repo="${repo,,}"
+
           tag="${{ github.ref }}"
           tag="${tag##*/}"
+          if [[ "$tag" =~ ^v[0-9].* ]]; then
+            tag="${tag:1}"
+          fi
+
           dock_image="$repo:$tag"
           dock_image="${dock_image,,}"  # to lower case
         fi
