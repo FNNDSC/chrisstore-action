@@ -58,6 +58,10 @@ runs:
           echo "::error ::dock_image=$dock_image is not tagged by version"
           exit 1
         fi
+        if [[ "$dock_image" = *":latest" ]]; then
+          echo "::error ::dock_image=$dock_image cannot end with :latest"
+          exit 1
+        fi
 
         public_repo="${{ inputs.public_repo }}"
         if [ -z "$public_repo" ]; then
