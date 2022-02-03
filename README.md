@@ -41,3 +41,29 @@ The default value for `url` is `https://chrisstore.co/api/v1/`.
 
 `name`, `dock_image`, and `public_repo` are optional. If not specified,
 their values will be inferred from the name of the Github repository.
+But as a caveat, `dock_image` can only be inferred when the action's ref is a tag.
+Moreover, this action will enforce that `dock_image` is tagged by version,
+and that `dock_image` does not end with `:latest`.
+
+### Minimal Example
+
+```yaml
+name: publish
+
+on:
+  push:
+    tags: [ '**' ]
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create JSON descriptor file
+        run: podman run --rm ghcr.io/fnndsc/pl-myappname:1.2.3 chris_plugin_info > /tmp/App.json
+      - name: Upload to ChRIS Store
+        id: chrisstore
+        uses: FNNDSC/chrisstore-action@master
+        with:
+          descriptor_file: /tmp/App.json
+          auth: ${{ secrets.CHRIS_STORE_USER }}
+```
