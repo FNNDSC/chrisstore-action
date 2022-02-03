@@ -54,7 +54,7 @@ runs:
           tag="${tag##*/}"
           dock_image=$repo:$tag
         fi
-        if ! [ "$dock_image" = *":"* ]; then
+        if ! [[ "$dock_image" = *":"* ]]; then
           echo "::error ::dock_image=$dock_image is not tagged by version"
           exit 1
         fi
