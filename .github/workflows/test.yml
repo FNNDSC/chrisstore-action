@@ -1,0 +1,98 @@
+name: test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: fnndsc/miniChRIS@20211115
+      - uses: actions/checkout@v2
+      - name: Create examples
+        run: |
+          cat > /tmp/a.json << EOF
+          {
+            "type": "fs",
+            "parameters": [
+              {
+                "name": "repo",
+                "type": "str",
+                "optional": false,
+                "flag": "--repo",
+                "short_flag": "-r",
+                "action": "store",
+                "help": "repository URI",
+                "default": null,
+                "ui_exposed": true
+              }
+            ],
+            "icon": "",
+            "authors": "FNNDSC <dev@babyMRI.org>",
+            "title": "Git Clone",
+            "category": "",
+            "description": "A ChRIS fs plugin for git clone",
+            "documentation": "https://github.com/FNNDSC/chris_plugin/tree/master/examples/pl-git-clone",
+            "license": "MIT",
+            "version": "1.0.0",
+            "selfpath": "/usr/local/bin",
+            "selfexec": "git_clone_wrapper",
+            "execshell": "/usr/local/bin/python",
+            "min_number_of_workers": 1,
+            "max_number_of_workers": 1,
+            "min_memory_limit": "",
+            "max_memory_limit": "",
+            "min_cpu_limit": "",
+            "max_cpu_limit": "",
+            "min_gpu_limit": 0,
+            "max_gpu_limit": 0
+          }
+          EOF
+      - name: Upload to ChRIS Store
+        id: chrisstore
+        uses: ./
+        with:
+          name: pl-upload-example
+          descriptor_file: /tmp/a.json
+          dock_image: docker.io/fnndsc/aCoolTag:0.0.0
+          public_repo: https://github.com/FNNDSC/myExampleRepo
+          auth: "chris:chris1234"
+          url: http://localhost:8010/api/v1/
+      - name: assert
+        run: |
+          res="$(
+            curl 'http://localhost:8010/api/v1/plugins/search/?name_exact=pl-upload-example' \
+              -H 'accept:application/json'
+          )"
+          rc=$?
+          if [ "$rc" != "0" ]; then
+            echo "::error ::Search failed"
+            exit $rc
+          fi
+          count="$(jq '.count' <<< "$res")"
+          if [ "$count" = "0" ]; then
+            echo "::error ::Plugin not found"
+            exit 1
+          fi
+
+          result="$(jq '.results[0]' <<< "$res")"
+
+          function get () {
+            jq -r "$1" <<< "$result"
+          }
+
+          function assert () {
+            local expected="$(get "$1")"
+            if [ "$expected" != "$2" ]; then
+              echo "::error ::failed assertion: $expected != $2"
+              exit 1
+            fi
+          }
+          
+          assert .url "${{ steps.chrisstore.outputs.plugin_url }}"
+          assert .public_repo "https://github.com/FNNDSC/myExampleRepo"
+          assert .dock_image "docker.io/fnndsc/aCoolTag:0.0.0"
+          assert .selfexec "git_clone_wrapper"

@@ -1,0 +1,94 @@
+name: "ChRIS Store Upload"
+description: "Upload a ChRIS plugin's JSON representation to the ChRIS Store"
+author: "FNNDSC"
+
+inputs:
+  descriptor_file:
+    description: Path to JSON representation of ChRIS plugin
+    required: true
+  dock_image:
+    description: Container image manifest tag
+    required: false
+  name:
+    description: Plugin name
+    required: false
+    default: ''
+  public_repo:
+    description: Source code repository URL
+    required: false
+    default: ''
+  auth:
+    description: 'ChRIS store user, in the format "username:password"'
+    required: true
+  url:
+    description: 'URL of ChRIS store'
+    required: false
+    default: "https://chrisstore.co/api/v1/"
+
+outputs:
+  plugin_url:
+    description: "URL of created plugin"
+    value: "${{ steps.upload.outputs.href }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Plugin Information
+      id: info
+      run: |
+        name="${{ inputs.name }}"
+        if [ -z "$name" ]; then
+          name="$(sed 's/^.*\///' <<< ${{ github.repository }})"
+        fi
+
+        dock_image="${{ inputs.dock_image }}"
+        if [ -z "$dock_image" ]; then
+          if ! [ "${{ github.ref }}" = "refs/tags/"* ]; then
+            echo "::error ::dock_image not given, and cannot automatically determine git tag"
+            exit 1
+          fi
+          repo="${{ github.repository }}"
+          repo="${repo,,}"
+          tag="${{ github.ref }}"
+          tag="${tag##*/}"
+          dock_image=$repo:$tag
+        fi
+        if ! [ "$dock_image" = *":"* ]; then
+          echo "::error ::dock_image=$dock_image is not tagged by version"
+          exit 1
+        fi
+
+        public_repo="${{ inputs.public_repo }}"
+        if [ -z "$public_repo" ]; then
+          public_repo=https://github.com/${{ github.repository }}"
+        fi
+
+        echo "::set-output name=name::$name"
+        echo "::set-output name=dock_image::$dock_image"
+        echo "::set-output name=public_repo::$public_repo"
+
+    - name: Upload to ChRIS Store
+      id: upload
+      run: |
+        res=$(
+          curl -s -u "${{ inputs.auth }}" "${{ inputs.url }}/plugins/" \
+            -H 'Accept:application/vnd.collection+json' \
+            -F "name=${{ steps.info.outputs.name }}" \
+            -F "dock_image=${{ steps.info.outputs.dock_image }}"  \
+            -F "descriptor_file=@${{ inputs.descriptor_file }}" \
+            -F "public_repo=${{ steps.info.outputs.public_repo }}"
+        )
+        success=$?
+        echo "::debug::$res"
+        if [ "$success" = "0" ]; then
+          href="$(jq -r '.collection.items[0].href' <<< "$res")"
+          echo "::set-output name=href::$href"
+        else
+          echo "::error ::Failed upload to ChRIS Store"
+          echo "::error ::response: $res"
+          exit $success
+        fi
+
+branding:
+  color: "blue"
+  icon: "shopping-bag"
