@@ -52,7 +52,8 @@ runs:
           repo="${repo,,}"
           tag="${{ github.ref }}"
           tag="${tag##*/}"
-          dock_image=$repo:$tag
+          dock_image="$repo:$tag"
+          dock_image="${dock_image,,}"  # to lower case
         fi
         if ! [[ "$dock_image" = *":"* ]]; then
           echo "::error ::dock_image=$dock_image is not tagged by version"
