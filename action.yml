@@ -61,7 +61,7 @@ runs:
 
         public_repo="${{ inputs.public_repo }}"
         if [ -z "$public_repo" ]; then
-          public_repo=https://github.com/${{ github.repository }}"
+          public_repo="https://github.com/${{ github.repository }}"
         fi
 
         echo "::set-output name=name::$name"
