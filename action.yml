@@ -35,6 +35,7 @@ runs:
   steps:
     - name: Plugin Information
       id: info
+      shell: bash
       run: |
         name="${{ inputs.name }}"
         if [ -z "$name" ]; then
@@ -69,6 +70,7 @@ runs:
 
     - name: Upload to ChRIS Store
       id: upload
+      shell: bash
       run: |
         res=$(
           curl -s -u "${{ inputs.auth }}" "${{ inputs.url }}/plugins/" \
