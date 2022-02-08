@@ -82,8 +82,9 @@ runs:
       id: upload
       shell: bash
       run: |
+        set +e  # let us handle error, instead of stopping silently
         res=$(
-          curl -s -u "${{ inputs.auth }}" "${{ inputs.url }}/plugins/" \
+          curl -s -u "${{ inputs.auth }}" "${{ inputs.url }}plugins/" \
             -H 'Accept:application/vnd.collection+json' \
             -F "name=${{ steps.info.outputs.name }}" \
             -F "dock_image=${{ steps.info.outputs.dock_image }}"  \
