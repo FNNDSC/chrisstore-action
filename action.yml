@@ -44,7 +44,7 @@ runs:
 
         dock_image="${{ inputs.dock_image }}"
         if [ -z "$dock_image" ]; then
-          if ! [ "${{ github.ref }}" = "refs/tags/"* ]; then
+          if ! [[ "${{ github.ref }}" = "refs/tags/"* ]]; then
             echo "::error ::dock_image not given, and cannot automatically determine git tag"
             exit 1
           fi
