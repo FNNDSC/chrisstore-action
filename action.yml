@@ -96,6 +96,7 @@ runs:
         if [ "$success" = "0" ]; then
           href="$(jq -r '.collection.items[0].href' <<< "$res")"
           echo "::set-output name=href::$href"
+          echo "$href"
         else
           echo "::error ::Failed upload to ChRIS Store"
           echo "::error ::response: $res"
