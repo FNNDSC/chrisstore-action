@@ -83,8 +83,9 @@ runs:
       shell: bash
       run: |
         set +e  # let us handle error, instead of stopping silently
+        # --fail-with-body not supported in this version of curl
         res=$(
-          curl -s --fail-with-body --show-error -u "${{ inputs.auth }}" \
+          curl -s --show-error -u "${{ inputs.auth }}" \
             "${{ inputs.url }}plugins/" \
             -H 'Accept:application/vnd.collection+json' \
             -F "name=${{ steps.info.outputs.name }}" \
