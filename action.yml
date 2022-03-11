@@ -84,7 +84,8 @@ runs:
       run: |
         set +e  # let us handle error, instead of stopping silently
         res=$(
-          curl -sf -u "${{ inputs.auth }}" "${{ inputs.url }}plugins/" \
+          curl -s --fail-with-body --show-error -u "${{ inputs.auth }}" \
+            "${{ inputs.url }}plugins/" \
             -H 'Accept:application/vnd.collection+json' \
             -F "name=${{ steps.info.outputs.name }}" \
             -F "dock_image=${{ steps.info.outputs.dock_image }}"  \
