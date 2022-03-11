@@ -84,7 +84,7 @@ runs:
       run: |
         set +e  # let us handle error, instead of stopping silently
         res=$(
-          curl -s -u "${{ inputs.auth }}" "${{ inputs.url }}plugins/" \
+          curl -sf -u "${{ inputs.auth }}" "${{ inputs.url }}plugins/" \
             -H 'Accept:application/vnd.collection+json' \
             -F "name=${{ steps.info.outputs.name }}" \
             -F "dock_image=${{ steps.info.outputs.dock_image }}"  \
@@ -96,8 +96,13 @@ runs:
         if [ "$success" = "0" ]; then
           href="$(jq -r '.collection.items[0].href' <<< "$res")"
           echo "::set-output name=href::$href"
-          echo "$href"
-        else
+          if [ "$href" = "null" ]; then
+            success=1
+          else
+            echo "$href"
+          fi
+        fi
+        if [ "$success" != "0" ]; then
           echo "::error ::Failed upload to ChRIS Store"
           echo "::error ::response: $res"
           exit $success
