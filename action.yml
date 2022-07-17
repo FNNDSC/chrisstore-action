@@ -154,7 +154,7 @@ runs:
               "${{ inputs.chris_admin_url }}" \
               -H 'Accept: application/json' \
               -H 'Content-Type: application/json' \
-              --data '{"compute_name": "'$cr'", "plugin_store_url: "${{ steps.upload.outputs.href }}"}'
+              --data '{"compute_name": "'$cr'", "plugin_store_url": "${{ steps.upload.outputs.href }}"}'
           )"
 
           success=$?
