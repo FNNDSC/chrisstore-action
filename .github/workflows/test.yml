@@ -10,8 +10,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: fnndsc/miniChRIS@20220203
-      - uses: actions/checkout@v2
+      - uses: fnndsc/miniChRIS-docker@master
+      - uses: actions/checkout@v3
       - name: Create examples
         run: |
           cat > /tmp/a.json << EOF
@@ -61,20 +61,20 @@ jobs:
           public_repo: https://github.com/FNNDSC/myExampleRepo
           auth: "chris:chris1234"
           url: http://localhost:8010/api/v1/
-      - name: assert
+
+          chris_admin_auth: "chris:chris1234"
+          chris_admin_url: http://localhost:8000/chris-admin/api/v1/
+          compute_resources: host  # TODO test multiple
+
+      - name: Assertions
         run: |
           res="$(
             curl 'http://localhost:8010/api/v1/plugins/search/?name_exact=pl-upload-example' \
               -H 'accept:application/json'
           )"
-          rc=$?
-          if [ "$rc" != "0" ]; then
-            echo "::error ::Search failed"
-            exit $rc
-          fi
           count="$(jq '.count' <<< "$res")"
           if [ "$count" = "0" ]; then
-            echo "::error ::Plugin not found"
+            echo "::error ::Plugin not found in Store"
             exit 1
           fi
 
@@ -96,3 +96,18 @@ jobs:
           assert .public_repo "https://github.com/FNNDSC/myExampleRepo"
           assert .dock_image "docker.io/fnndsc/aCoolTag:0.0.0"
           assert .selfexec "git_clone_wrapper"
+
+          res="$(
+            curl -u 'chris:chris1234' \
+              'http://localhost:8000/api/v1/plugins/search/?name_exact=pl-upload-example' \
+              -H 'accept:application/json'
+          )"
+          count="$(jq '.count' <<< "$res")"
+          if [ "$count" = "0" ]; then
+            echo "::error ::Plugin not found in CUBE"
+            exit 1
+          fi
+          result="$(jq '.results[0]' <<< "$res")"
+
+          assert .dock_image "docker.io/fnndsc/aCoolTag:0.0.0"
+          assert .url "${{ steps.chrisstore.outputs.plugin_cube_url }}"
