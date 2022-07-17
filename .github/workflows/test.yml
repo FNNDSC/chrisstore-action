@@ -62,9 +62,10 @@ jobs:
           auth: "chris:chris1234"
           url: http://localhost:8010/api/v1/
 
-          chris_admin_auth: "chris:chris1234"
-          chris_admin_url: http://localhost:8000/chris-admin/api/v1/
-          compute_resources: host  # TODO test multiple
+          # CUBE registration is untestable because of the docker networks.
+          # chris_admin_auth: "chris:chris1234"
+          # chris_admin_url: http://localhost:8000/chris-admin/api/v1/
+          # compute_resources: host  # TODO test multiple
 
       - name: Assertions
         run: |
@@ -97,17 +98,19 @@ jobs:
           assert .dock_image "docker.io/fnndsc/aCoolTag:0.0.0"
           assert .selfexec "git_clone_wrapper"
 
-          res="$(
-            curl -u 'chris:chris1234' \
-              'http://localhost:8000/api/v1/plugins/search/?name_exact=pl-upload-example' \
-              -H 'accept:application/json'
-          )"
-          count="$(jq '.count' <<< "$res")"
-          if [ "$count" = "0" ]; then
-            echo "::error ::Plugin not found in CUBE"
-            exit 1
-          fi
-          result="$(jq '.results[0]' <<< "$res")"
+          # # checks for CUBE plugin registration
 
-          assert .dock_image "docker.io/fnndsc/aCoolTag:0.0.0"
-          assert .url "${{ steps.chrisstore.outputs.plugin_cube_url }}"
+          # res="$(
+          #   curl -u 'chris:chris1234' \
+          #     'http://localhost:8000/api/v1/plugins/search/?name_exact=pl-upload-example' \
+          #     -H 'accept:application/json'
+          # )"
+          # count="$(jq '.count' <<< "$res")"
+          # if [ "$count" = "0" ]; then
+          #   echo "::error ::Plugin not found in CUBE"
+          #   exit 1
+          # fi
+          # result="$(jq '.results[0]' <<< "$res")"
+
+          # assert .dock_image "docker.io/fnndsc/aCoolTag:0.0.0"
+          # assert .url "${{ steps.chrisstore.outputs.plugin_cube_url }}"
