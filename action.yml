@@ -25,11 +25,26 @@ inputs:
     required: false
     default: "https://chrisstore.co/api/v1/"
 
+  chris_admin_auth:
+    description: 'ChRIS backend superuser, in the format "username:password"'
+    required: false
+    default: ''
+  chris_admin_url:
+    description: 'ChRIS backend /chris-admin/api/v1/ endpoint URL'
+    required: false
+    default: ''
+  compute_resources:
+    description: 'Compute resources to register this plugin to.'
+    required: false
+    default: ''
+
 outputs:
   plugin_url:
     description: "URL of created plugin"
     value: "${{ steps.upload.outputs.href }}"
-
+  plugin_cube_url:
+    description: "URL of plugin in CUBE."
+    value: "${{ steps.cube.outputs.url }}"
 runs:
   using: "composite"
   steps:
@@ -109,6 +124,59 @@ runs:
           echo "::error ::response: $res"
           exit $success
         fi
+
+    - name: Register to CUBE
+      id: cube
+      shell: bash
+      if: ${{ inputs.chris_admin_url }}
+      run: |
+        if [ -z "${{ inputs.chris_admin_auth }}" ]; then
+          echo "::error ::chris_admin_auth is required"
+          exit 1
+        fi
+
+        if [ -z "${{ inputs.compute_resources }}" ]; then
+          echo "::error ::chris_admin_auth is required"
+          exit 1
+        fi
+
+        set +e  # let us handle error, instead of stopping silently
+
+        # split csv into array
+        IFS=',' read -ra compute_resources <<< "${{ inputs.compute_resources }}"
+
+        for cr in "${compute_resources[@]}"; do
+          >&2 echo "${{ steps.upload.outputs.href }} --> $cr"
+
+          res="$(
+            curl -s --show-error \
+              -u "${{ inputs.chris_admin_auth }}" \
+              "${{ inputs.chris_admin_url }}" \
+              -H 'Accept: application/json' \
+              -H 'Content-Type: application/json' \
+              --data '{"compute_name": "'$cr'", "plugin_store_url: "${{ steps.upload.outputs.href }}"}'
+          )"
+
+          success=$?
+          echo "::debug::$res"
+          if [ "$success" = "0" ] \
+              && url="$(jq -r '.url' <<< "$res")" \
+              && [ "$url" = "null" ]; then
+            success=1
+          fi
+
+          if [ "$success" != "0" ]; then
+            echo "::error ::Failed to register plugin to CUBE."
+            echo "::error ::response: $res"
+            exit $success
+          fi
+        done
+
+        echo "::set-output name=url::$url"
+
+        >&2 echo ""
+        >&2 echo "$url"
+
 
 branding:
   color: "blue"

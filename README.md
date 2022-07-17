@@ -1,7 +1,7 @@
 # ChRIS Store Action
 
-A Github Action for pushing a ChRIS plugin JSON descriptor file
-to a ChRIS store.
+A Github Action for publishing a ChRIS plugin JSON descriptor file
+to a ChRIS store, and optionally, to a ChRIS backend as well.
 
 ## Example
 
@@ -22,12 +22,18 @@ jobs:
         id: chrisstore
         uses: FNNDSC/chrisstore-action@master
         with:
+          # ChRIS Store information
           name: pl-myappname
           descriptor_file: /tmp/App.json
           dock_image: ghcr.io/fnndsc/pl-myappname:1.2.3
           public_repo: https://github.com/FNNDSC/myExampleRepo
           auth: ${{ secrets.CHRIS_STORE_USER }}
           url: https://chrisstore.co/api/v1/
+
+          # Optional ChRIS backend admin information
+          chris_admin_auth: ${{ secrets.CUBE_CHRISPROJECT_ORG_ADMIN_USER }}
+          chris_admin_url: https://cube.chrisproject.org/chris-admin/api/v1/
+          compute_resources: host,moc  # comma-separated list of names
 ```
 
 ## Options
