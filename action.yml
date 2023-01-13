@@ -89,9 +89,9 @@ runs:
           public_repo="https://github.com/${{ github.repository }}"
         fi
 
-        echo "::set-output name=name::$name"
-        echo "::set-output name=dock_image::$dock_image"
-        echo "::set-output name=public_repo::$public_repo"
+        echo "name=$name" >> $GITHUB_OUTPUT
+        echo "dock_image=$dock_image" >> $GITHUB_OUTPUT
+        echo "public_repo=$public_repo" >> $GITHUB_OUTPUT
 
     - name: Upload to ChRIS Store
       id: upload
@@ -112,7 +112,8 @@ runs:
         echo "::debug::$res"
         if [ "$success" = "0" ]; then
           href="$(jq -r '.collection.items[0].href' <<< "$res")"
-          echo "::set-output name=href::$href"
+          echo "href=$href" >> $GITHUB_OUTPUT
+
           if [ "$href" = "null" ]; then
             success=1
           else
@@ -165,7 +166,7 @@ runs:
           exit $success
         fi
 
-        echo "::set-output name=url::$url"
+        echo "url=$url" >> $GITHUB_OUTPUT
 
         >&2 echo ""
         >&2 echo "$url"
